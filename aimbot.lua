@@ -1,37 +1,43 @@
 local player = game.Players.LocalPlayer
-local chests = workspace:FindFirstChild("Chests") -- Thay bằng thư mục chứa rương
+local questGiverName = "Quest Giver 2" -- Tên của NPC nhận nhiệm vụ
+local questButtonName = "QuestButton" -- Tên nút để chấp nhận nhiệm vụ, có thể phải điều chỉnh
 
-if not chests then
-    warn("Không tìm thấy thư mục 'Chests' trong workspace!")
-    return
-end
-
--- Các loại rương
-local chestTypes = {
-    Silver = "SilverChest",
-    Golden = "GoldenChest",
-    Diamond = "DiamondChest"
-}
-
--- Hàm tự động thu thập rương
-local function collectChests()
-    for _, chest in pairs(chests:GetChildren()) do
-        for _, chestType in pairs(chestTypes) do
-            if chest.Name == chestType then
-                -- Di chuyển đến rương
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    player.Character.HumanoidRootPart.CFrame = chest.CFrame
-                    wait(0.5) -- Đợi để nhặt rương
-                end
-            end
+-- Tìm NPC Quest Giver
+local function findQuestGiver()
+    for _, npc in pairs(workspace:GetDescendants()) do
+        if npc:IsA("Model") and npc.Name == questGiverName then
+            return npc
         end
     end
+    return nil
 end
 
--- Chạy vòng lặp auto-farm
-while wait(1) do
-    local success, err = pcall(collectChests)
-    if not success then
-        warn("Lỗi khi chạy collectChests: " .. err)
+-- Tương tác với NPC
+local function interactWithQuestGiver(npc)
+    if not npc then
+        warn("Không tìm thấy NPC Quest Giver!")
+        return
     end
+
+    -- Di chuyển đến NPC
+    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        humanoidRootPart.CFrame = npc.PrimaryPart.CFrame + Vector3.new(0, 3, 0) -- Di chuyển gần NPC
+        wait(1)
+    end
+
+    -- Tìm và nhấn nút chấp nhận nhiệm vụ
+    local questButton = npc:FindFirstChild(questButtonName, true)
+    if questButton and questButton:IsA("ProximityPrompt") then
+        fireproximityprompt(questButton)
+        print("Đã nhận nhiệm vụ từ " .. questGiverName)
+    else
+        warn("Không tìm thấy nút chấp nhận nhiệm vụ!")
+    end
+end
+
+-- Chạy script tự động
+while wait(5) do -- Kiểm tra nhiệm vụ mỗi 5 giây
+    local questGiver = findQuestGiver()
+    interactWithQuestGiver(questGiver)
 end
