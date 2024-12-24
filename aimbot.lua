@@ -1,63 +1,47 @@
 -- Dịch vụ cần thiết
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
 
--- Cài đặt cho Auto Clicker
-local autoClickEnabled = false -- Bật/tắt auto clicker
-local autoClickInterval = 0.1 -- Thời gian giữa các lần click (giây)
-local lastClickTime = 0
+-- Cài đặt
+local mansionName = "Mansion"  -- Thay đổi tên này thành tên mansion trong game
+local destination = nil  -- Biến để lưu vị trí của mansion
 
--- Cài đặt cho Faster Attack (tăng tốc độ tấn công)
-local fasterAttackEnabled = false -- Bật/tắt tăng tốc độ tấn công
-local attackInterval = 0.1 -- Thời gian giữa các lần tấn công (giây)
-local lastAttackTime = 0
-
--- Hàm để tự động click chuột
-local function autoClick()
-    if autoClickEnabled then
-        local currentTime = tick()
-        if currentTime - lastClickTime >= autoClickInterval then
-            mouse1click()  -- Mô phỏng click chuột trái
-            lastClickTime = currentTime
+-- Hàm tìm mansion trong game
+local function findMansion()
+    -- Lấy tất cả các đối tượng trong workspace
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name == mansionName then
+            -- Lấy vị trí của mansion (PrimaryPart phải được cấu hình)
+            if obj:FindFirstChild("PrimaryPart") then
+                destination = obj.PrimaryPart.Position
+                print("Đã tìm thấy Mansion tại vị trí: " .. tostring(destination))
+                return
+            end
         end
+    end
+    print("Không tìm thấy Mansion.")
+end
+
+-- Hàm di chuyển nhân vật đến mansion
+local function moveToMansion()
+    if destination then
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            -- Di chuyển đến vị trí mansion
+            humanoid:MoveTo(destination)
+        end
+    else
+        print("Vui lòng tìm Mansion trước khi di chuyển.")
     end
 end
 
--- Hàm để tăng tốc độ tấn công
-local function fasterAttack()
-    if fasterAttackEnabled then
-        local currentTime = tick()
-        if currentTime - lastAttackTime >= attackInterval then
-            -- Gọi hàm tấn công của game ở đây (Ví dụ: "Attack()" hoặc "FireEvent()")
-            -- Tùy thuộc vào cách tấn công trong trò chơi của bạn.
-            -- Ví dụ: game.ReplicatedStorage.AttackEvent:FireServer() hoặc tương tự
+-- Tìm mansion khi game bắt đầu
+findMansion()
 
-            lastAttackTime = currentTime
-        end
-    end
-end
-
--- Kích hoạt Auto Clicker khi nhấn phím X
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed then
-        if input.KeyCode == Enum.KeyCode.X then
-            autoClickEnabled = not autoClickEnabled
-            print("Auto Clicker: " .. (autoClickEnabled and "ON" or "OFF"))
-        end
-
-        -- Bật/tắt Faster Attack khi nhấn phím Z
-        if input.KeyCode == Enum.KeyCode.Z then
-            fasterAttackEnabled = not fasterAttackEnabled
-            print("Faster Attack: " .. (fasterAttackEnabled and "ON" or "OFF"))
-        end
-    end
-end)
-
--- Vòng lặp liên tục để chạy Auto Clicker và Faster Attack
+-- Vòng lặp liên tục để theo dõi và di chuyển đến mansion
 RunService.RenderStepped:Connect(function()
-    autoClick()  -- Thực hiện Auto Clicker
-    fasterAttack()  -- Thực hiện Faster Attack
+    if destination then
+        moveToMansion()  -- Di chuyển đến mansion khi tìm thấy
+    end
 end)
