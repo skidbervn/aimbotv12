@@ -1,23 +1,23 @@
--- Dịch vụ cần thiết
+-- Dịch vụ Roblox
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
--- Tên của rương (Chest) trong trò chơi
-local chestName = "Chest" -- Thay đổi theo tên của rương trong trò chơi
-local autoTeleport = true -- Điều khiển bật/tắt tính năng
+-- Cài đặt
+local chestName = "Chest" -- Thay đổi thành tên rương chính xác
+local autoTeleport = true -- Điều khiển bật/tắt tính năng tự động
 
--- Tìm rương gần nhất
+-- Hàm tìm rương gần nhất
 local function getNearestChest()
     local nearestChest = nil
     local shortestDistance = math.huge
 
-    for _, chest in pairs(workspace:GetDescendants()) do
-        if chest:IsA("Model") and chest.Name == chestName and chest:FindFirstChild("PrimaryPart") then
-            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - chest.PrimaryPart.Position).Magnitude
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name == chestName and obj:FindFirstChild("PrimaryPart") then
+            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - obj.PrimaryPart.Position).Magnitude
             if distance < shortestDistance then
                 shortestDistance = distance
-                nearestChest = chest
+                nearestChest = obj
             end
         end
     end
@@ -25,26 +25,29 @@ local function getNearestChest()
     return nearestChest
 end
 
--- Teleport đến rương
+-- Hàm Teleport
 local function teleportToChest(chest)
     if chest and chest:FindFirstChild("PrimaryPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = chest.PrimaryPart.CFrame
+        LocalPlayer.Character.HumanoidRootPart.CFrame = chest.PrimaryPart.CFrame + Vector3.new(0, 5, 0) -- Dịch chuyển lên trên để tránh va chạm
+        print("Dịch chuyển đến rương:", chest.Name)
+    else
+        print("Không tìm thấy rương hoặc rương không có PrimaryPart.")
     end
 end
 
--- Vòng lặp tự động
+-- Vòng lặp tự động Teleport
 RunService.RenderStepped:Connect(function()
     if autoTeleport then
-        local chest = getNearestChest()
-        if chest then
-            teleportToChest(chest)
+        local nearestChest = getNearestChest()
+        if nearestChest then
+            teleportToChest(nearestChest)
         else
-            print("Không tìm thấy rương nào.")
+            print("Không có rương nào trong phạm vi.")
         end
     end
 end)
 
--- Nút bật/tắt Teleport (T phím)
+-- Phím bật/tắt tính năng (phím T)
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.T then
         autoTeleport = not autoTeleport
