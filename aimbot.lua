@@ -1,4 +1,5 @@
--- Tên các trái ác quỷ cần nhặt
+local TeleportService = game:GetService("TeleportService")
+local player = game.Players.LocalPlayer
 local desiredFruits = {
     "Kitsune", "Leopard", "Dragon", "Spirit", "Control", "Venom",
     "Shadow", "Dough", "T-Rex", "Mammoth", "Gravity", "Blizzard",
@@ -9,9 +10,7 @@ local desiredFruits = {
     "Chop", "Spin", "Rocket"
 }
 
-local player = game.Players.LocalPlayer
-
--- Tìm trái ác quỷ
+-- Tìm trái ác quỷ trong workspace
 local function findFruits()
     for _, fruit in pairs(workspace:GetDescendants()) do
         if fruit:IsA("Tool") and table.find(desiredFruits, fruit.Name) then
@@ -34,15 +33,33 @@ local function collectFruit(fruit)
     end
 end
 
--- Đổi server
-local function switchServer()
+-- Đổi sang server ít người (chọn server có ít người chơi)
+local function switchToLowPopulationServer()
+    local placeId = game.PlaceId
     local teleportService = game:GetService("TeleportService")
-    local servers = {} -- Dùng API hoặc danh sách server để tìm server mới
-    if #servers > 0 then
-        local randomServer = servers[math.random(1, #servers)]
-        teleportService:TeleportToPlaceInstance(game.PlaceId, randomServer, player)
+    
+    -- Lấy danh sách server có sẵn
+    local serverList = teleportService:GetAvailablePlaceInstances(placeId)
+    
+    if #serverList == 0 then
+        print("Không có server nào khả dụng.")
+        return
+    end
+
+    -- Tìm server có ít người chơi
+    local targetServer
+    for _, server in pairs(serverList) do
+        if not targetServer or server.Players < targetServer.Players then
+            targetServer = server
+        end
+    end
+
+    -- Nếu tìm thấy server ít người, teleport đến đó
+    if targetServer then
+        teleportService:TeleportToPlaceInstance(placeId, targetServer.InstanceId, player)
+        print("Đang chuyển sang server ít người...")
     else
-        print("Không tìm thấy server phù hợp để đổi!")
+        print("Không tìm thấy server ít người.")
     end
 end
 
@@ -52,7 +69,7 @@ while wait(5) do
     if fruit then
         collectFruit(fruit)
     else
-        print("Không tìm thấy trái mong muốn, đổi server...")
-        switchServer()
+        print("Không tìm thấy trái mong muốn, chuyển server...")
+        switchToLowPopulationServer()
     end
 end
