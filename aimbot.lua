@@ -15,7 +15,20 @@ mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true -- Kéo thả menu
 
--- Tạo nút Teleport
+-- Hàm di chuyển trực tiếp đến vị trí
+local function teleportTo(position)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if humanoidRootPart then
+        -- Đưa nhân vật đến vị trí
+        humanoidRootPart.CFrame = CFrame.new(position)
+    else
+        warn("Không tìm thấy HumanoidRootPart để teleport!")
+    end
+end
+
+-- Hàm tạo nút Teleport
 local function createButton(name, position, teleportPosition)
     local button = Instance.new("TextButton", mainFrame)
     button.Name = name .. "Button"
@@ -30,28 +43,6 @@ local function createButton(name, position, teleportPosition)
     button.MouseButton1Click:Connect(function()
         teleportTo(teleportPosition)
     end)
-end
-
--- Hàm di chuyển đến vị trí (Fly)
-local function teleportTo(position)
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-
-    if humanoidRootPart then
-        -- Dịch chuyển dần đến vị trí
-        local flySpeed = 100 -- Tốc độ bay
-        local distance = (humanoidRootPart.Position - position).Magnitude
-        local duration = distance / flySpeed
-        local startTime = tick()
-
-        game:GetService("RunService").RenderStepped:Connect(function()
-            local elapsed = tick() - startTime
-            if elapsed > duration then return end
-
-            local lerpPosition = humanoidRootPart.Position:Lerp(position, elapsed / duration)
-            humanoidRootPart.CFrame = CFrame.new(lerpPosition)
-        end)
-    end
 end
 
 -- Tạo nút cho từng địa điểm
